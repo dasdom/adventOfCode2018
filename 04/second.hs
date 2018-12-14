@@ -16,15 +16,16 @@ main = do
     let summedTimes = sortBy (\x y -> compare (snd y) (snd x)) $ foldl (\accx x -> accx ++ [foldl (\accy y -> (fst y, snd accy + snd y)) (0,0) x]) [] groupedTimes
     let guardId = fst . head $ summedTimes
     print guardId
-    let dates = getDates input
-    let allInfo2= filter (\x -> not . isGuardId . third4 $ x) $ zip4 guardIds times what dates
-    let rawSleepTimes2 = foldl combineTimes2 [] $ filter (\x -> first4 x == guardId) allInfo2
-    let sleepTimes2 = foldl (\acc x -> if third4 x == "k" then acc ++ [(first4 x, second4 x, dropFirst . fourth4 $ x)] else acc) [] rawSleepTimes2
-    let groupedTimes2 = groupBy (\x y -> third x == third y) sleepTimes2
-    let summedTimes2 = foldl (\accx x -> accx ++ [foldl (\accy y -> accy ++ second y) [] x]) [] groupedTimes2
-    let minute = fst . last . sortOn snd $ foldl (\accx x -> accx ++ [foldl (\accy y -> if elem x y then (x, snd accy + 1) else (x, snd accy)) (0,0) summedTimes2]) [] [1..59]
-    print minute
-    print $ minute * guardId
+    --let dates = getDates input
+    let allInfo2 = filter (\x -> not . isGuardId . third $ x) $ zip3 guardIds times what
+    let rawSleepTimes2 = foldl combineTimes2 [] allInfo2
+    --print rawSleepTimes2
+    let sleepTimes2 = foldl (\acc x -> if third x == "k" then acc ++ [(first x, second x)] else acc) [] rawSleepTimes2
+    --print sleepTimes2
+    let sleepMinutes = foldl (++) [] $ foldl (\accx x -> accx ++ [foldl (\accy y -> accy ++ [(fst x, y)]) [] (snd x)]) [] sleepTimes2
+    print sleepMinutes
+    let groupedSleepMinutes = last $ last $ sortBy (\xs ys -> compare (length xs) (length ys)) $ group . sort $ sleepMinutes
+    print $ fst groupedSleepMinutes * snd groupedSleepMinutes
     
 
 
@@ -82,7 +83,7 @@ stopTime x acc = (first x, second x - (second . last $ acc), "k")
 combineTimes :: [(Int, Int, String)] -> (Int, Int, String) -> [(Int, Int, String)]
 combineTimes acc x = acc ++ [if third x == "asleep" then startTime x else stopTime x acc]
 
-combineTimes2 :: [(Int, [Int], String, String)] -> (Int, Int, String, String) -> [(Int, [Int], String, String)]
-combineTimes2 acc x = acc ++ [if third4 x == "asleep" then (first4 x, [second4 x], "d", fourth4 x) else (first4 x, [(head . second4 . last $ acc)..second4 x - 1], "k", fourth4 x)]
+combineTimes2 :: [(Int, [Int], String)] -> (Int, Int, String) -> [(Int, [Int], String)]
+combineTimes2 acc x = acc ++ [if third x == "asleep" then (first x, [second x], "d") else (first x, [(head . second . last $ acc)..second x - 1], "k")]
 
 
